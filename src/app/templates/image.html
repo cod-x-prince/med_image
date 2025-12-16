@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Random X-ray Image</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <div class="three-bg" id="three-bg"></div>
+    <div class="notification" id="notification"></div>
+
+    <div class="min-h-screen flex items-center justify-center p-8">
+      <div class="glass-card p-8 max-w-2xl text-center fade-in">
+        <h1 class="text-3xl font-bold mb-6 gradient-text">
+          Random X-ray Image
+        </h1>
+        <div class="mb-6">
+          <img
+            src="https://via.placeholder.com/500x400/1e293b/64748b?text=Sample+X-Ray"
+            alt="Random X-ray Image"
+            class="w-full max-w-md mx-auto rounded-lg shadow-lg image-zoom"
+          />
+        </div>
+        <a href="index.html" class="btn-primary inline-block">
+          <i class="fas fa-arrow-left mr-2"></i> Back to Analyzer
+        </a>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        initThreeBackground();
+      });
+
+      function initThreeBackground() {
+        const container = document.getElementById("three-bg");
+        if (!container) return;
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000
+        );
+        const renderer = new THREE.WebGLRenderer({ alpha: true });
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        const geometry = new THREE.BufferGeometry();
+        const vertices = new Float32Array(1500);
+        for (let i = 0; i < 1500; i++) {
+          vertices[i] = (Math.random() - 0.5) * 10;
+        }
+        geometry.setAttribute(
+          "position",
+          new THREE.BufferAttribute(vertices, 3)
+        );
+
+        const material = new THREE.PointsMaterial({
+          size: 0.02,
+          color: 0xffffff,
+          transparent: true,
+          opacity: 0.6,
+        });
+
+        const points = new THREE.Points(geometry, material);
+        scene.add(points);
+        camera.position.z = 2;
+
+        function animate() {
+          requestAnimationFrame(animate);
+          points.rotation.x += 0.0005;
+          points.rotation.y += 0.001;
+          renderer.render(scene, camera);
+        }
+        animate();
+      }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </body>
+</html>

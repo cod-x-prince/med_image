@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analysis History - HemaVision AI</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Additional styling for better spacing */
+      .history-page {
+        padding-top: 2rem;
+        min-height: calc(100vh - 120px);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .history-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .history-grid {
+        flex: 1;
+      }
+
+      /* Ensure proper spacing for empty state */
+      .empty-state-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Background Pattern -->
+    <div class="background-pattern"></div>
+
+    <!-- Notification System -->
+    <div class="notification" id="notification"></div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div id="flash-messages" style="display: none">
+      {% for category, message in messages %}
+      <div data-category="{{ category }}" data-message="{{ message }}"></div>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
+
+    <!-- Main Container -->
+    <div class="container">
+      <!-- Professional Header -->
+      <header class="header">
+        <div class="logo">
+          <div class="logo-icon"></div>
+          <span>HemaVision AI</span>
+        </div>
+        <nav class="nav-links">
+          <a href="{{ url_for('index') }}" class="nav-link">
+            <i class="fas fa-home"></i> Home
+          </a>
+          <a href="{{ url_for('history') }}" class="nav-link active">
+            <i class="fas fa-history"></i> History
+          </a>
+        </nav>
+      </header>
+
+      <!-- History Content -->
+      <div class="page active history-page">
+        <div class="history-content">
+          <header class="text-center mb-8 fade-in-up">
+            <h1 class="text-4xl font-bold mb-4 gradient-text">
+              Analysis History
+            </h1>
+            <p class="text-lg opacity-80">
+              Review previous medical imaging analyses
+            </p>
+          </header>
+
+          <!-- History Controls -->
+          <div class="glass-card p-6 mb-6 fade-in-up">
+            <div
+              class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+            >
+              <!-- Search Bar -->
+              <form
+                action="{{ url_for('history') }}"
+                method="GET"
+                class="w-full md:w-auto flex-1 max-w-md"
+              >
+                <div class="relative">
+                  <input
+                    type="text"
+                    name="search"
+                    placeholder="Search by Patient ID..."
+                    value="{{ request.args.get('search', '') }}"
+                    class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 pl-10 focus:outline-none focus:border-primary transition-colors text-white placeholder-white/50"
+                  />
+                  <i
+                    class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50"
+                  ></i>
+                  {% if request.args.get('search') %}
+                  <a
+                    href="{{ url_for('history') }}"
+                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white"
+                  >
+                    <i class="fas fa-times"></i>
+                  </a>
+                  {% endif %}
+                </div>
+              </form>
+              <div class="flex flex-wrap gap-3 items-center">
+                <form
+                  action="{{ url_for('delete_selected_history') }}"
+                  method="POST"
+                  id="delete-form"
+                  class="flex items-center gap-3"
+                >
+                  <input
+                    type="checkbox"
+                    id="select-all"
+                    class="w-5 h-5 rounded border-white/30 bg-white/10 text-primary focus:ring-primary"
+                  />
+                  <label
+                    for="select-all"
+                    class="text-sm opacity-60 cursor-pointer"
+                    >Select All</label
+                  >
+                  <button
+                    type="submit"
+                    class="btn btn-danger"
+                    onclick="return confirm('Delete selected analyses?')"
+                  >
+                    <i class="fas fa-trash mr-2"></i> Delete Selected
+                  </button>
+                </form>
+                <form
+                  action="{{ url_for('delete_all_history') }}"
+                  method="POST"
+                  onsubmit="return confirm('This will permanently delete ALL analysis history. Continue?');"
+                >
+                  <button type="submit" class="btn btn-secondary danger-btn">
+                    <i class="fas fa-broom mr-2"></i> Clear All
+                  </button>
+                </form>
+              </div>
+              <div class="flex items-center gap-3">
+                <span
+                  class="text-sm opacity-60 bg-white/10 px-3 py-1 rounded-full"
+                  >{{ history|length }} records</span
+                >
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                  <i class="fas fa-plus mr-2"></i> New Analysis
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {% if history %}
+          <div class="history-grid">
+            {% for item in history %}
+            <div
+              class="glass-card history-item fade-in-up"
+              style="--delay: {{ loop.index0 * 0.1 }}s; animation-delay: var(--delay)"
+            >
+              <div class="flex flex-col h-full">
+                <!-- Header -->
+                <div class="flex justify-between items-start mb-4">
+                  <div class="flex items-center gap-3 flex-1 min-w-0">
+                    <input
+                      type="checkbox"
+                      name="selected_files"
+                      value="{{ item.filename }}"
+                      form="delete-form"
+                      class="file-checkbox w-5 h-5 rounded border-white/30 bg-white/10 text-primary focus:ring-primary"
+                    />
+                    <div class="min-w-0 flex-1">
+                      <h3
+                        class="text-lg font-semibold truncate"
+                        title="{{ item.filename }}"
+                      >
+                        {{ item.filename }}
+                      </h3>
+                      <p class="text-sm opacity-60 mt-1">{{ item.date }}</p>
+                      {% if item.patient_id %}
+                      <p class="text-xs opacity-50 mt-0.5">
+                        ID: {{ item.patient_id }}
+                      </p>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Images Preview -->
+                <div class="history-images">
+                  <div class="image-container">
+                    <img
+                      src="{{ url_for('static', filename='uploads/' + item.filename) }}?v={{ item.timestamp }}"
+                      alt="Original Image"
+                      class="history-image"
+                      loading="eager"
+                    />
+                    <div class="image-overlay">
+                      <span class="image-label">Original</span>
+                    </div>
+                  </div>
+                  {% if item.heatmap_exists %}
+                  <div class="image-container">
+                    <img
+                      src="{{ url_for('static', filename='heatmaps/heatmap_' + item.filename) }}?v={{ item.timestamp }}"
+                      alt="AI Heatmap"
+                      class="history-image"
+                      loading="eager"
+                    />
+                    <div class="image-overlay">
+                      <span class="image-label">Heatmap</span>
+                    </div>
+                  </div>
+                  {% else %}
+                  <div class="image-container">
+                    <div class="history-image placeholder">
+                      <i class="fas fa-eye-slash text-2xl opacity-30"></i>
+                    </div>
+                    <div class="image-overlay">
+                      <span class="image-label">No Heatmap</span>
+                    </div>
+                  </div>
+                  {% endif %}
+                </div>
+
+                <!-- Predictions Summary -->
+                <div class="mt-4 flex-1">
+                  <p
+                    class="font-semibold mb-3 pb-2 border-b border-white/10 text-sm"
+                  >
+                    Top Predictions
+                  </p>
+                  <div class="space-y-3">
+                    {% for label, prob in item.prediction.items() %} {% if
+                    loop.index <= 3 %}
+                    <div class="space-y-1">
+                      <div class="flex justify-between items-center text-xs">
+                        <span>{{ label }}</span>
+                        <span>{{ "%.2f"|format(prob * 100) }}%</span>
+                      </div>
+                      <div class="w-full bg-white/10 rounded-full h-1.5">
+                        <div
+                          class="bg-primary h-1.5 rounded-full"
+                          style="--prog-width: {{ prob * 100 }}%; width: var(--prog-width);"
+                        ></div>
+                      </div>
+                    </div>
+                    {% endif %} {% endfor %}
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-2 mt-4 pt-3 border-t border-white/10">
+                  {% if item.pdf_exists %}
+                  <a
+                    href="{{ url_for('download_pdf', filename=item.filename.rsplit('.', 1)[0] + '_report.pdf') }}?v={{ item.timestamp }}"
+                    class="action-btn success"
+                    download
+                  >
+                    <i class="fas fa-file-pdf mr-1"></i> Report
+                  </a>
+                  {% else %}
+                  <span class="action-btn disabled">
+                    <i class="fas fa-file-exclamation mr-1"></i> No Report
+                  </span>
+                  {% endif %}
+
+                  <a
+                    href="{{ url_for('static', filename='uploads/' + item.filename) }}?v={{ item.timestamp }}"
+                    download
+                    class="action-btn primary"
+                  >
+                    <i class="fas fa-download mr-1"></i> Image
+                  </a>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <!-- Empty State - Centered vertically -->
+          <div class="empty-state-container">
+            <div
+              class="glass-card text-center py-16 fade-in-up w-full max-w-md"
+            >
+              <div class="mb-6">
+                <div
+                  class="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4"
+                >
+                  <i class="fas fa-folder-open text-2xl opacity-40"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-3">No Analysis History</h3>
+                <p class="opacity-60 mb-6 mx-auto text-sm">
+                  You haven't performed any medical image analyses yet. Upload
+                  your first image to get started.
+                </p>
+              </div>
+              <a href="{{ url_for('index') }}" class="btn btn-primary">
+                <i class="fas fa-upload mr-2"></i> Upload First Image
+              </a>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Back to Home - Only show when there's content -->
+          {% if history %}
+          <div class="text-center mt-8 pt-6 border-t border-white/10">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">
+              <i class="fas fa-arrow-left mr-2"></i> Back to Analyzer
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Handle Flash Messages
+        const flashMessages = document.getElementById("flash-messages");
+        if (flashMessages) {
+          const messages = flashMessages.children;
+          for (let i = 0; i < messages.length; i++) {
+            const category = messages[i].getAttribute("data-category");
+            const message = messages[i].getAttribute("data-message");
+            setTimeout(() => {
+              showNotification(
+                message,
+                category === "error" ? "error" : "success"
+              );
+            }, i * 500 + 500);
+          }
+        }
+
+        // Select All functionality
+        const selectAllCheckbox = document.getElementById("select-all");
+        if (selectAllCheckbox) {
+          selectAllCheckbox.addEventListener("change", function () {
+            document.querySelectorAll(".file-checkbox").forEach((checkbox) => {
+              checkbox.checked = this.checked;
+            });
+          });
+        }
+
+        // Fix lazy loading issues
+        document.querySelectorAll(".history-image").forEach((img) => {
+          img.loading = "eager";
+        });
+      });
+
+      // Notification System
+      function showNotification(message, type = "success") {
+        const notification = document.getElementById("notification");
+        let icon = "check-circle";
+        if (type === "warning") icon = "exclamation-triangle";
+        if (type === "error") icon = "times-circle";
+        if (type === "info") icon = "info-circle";
+
+        notification.innerHTML = `
+                <i class="fas fa-${icon}"></i> 
+                <span>${message}</span>
+                <button onclick="this.parentElement.classList.remove('show')" style="margin-left: auto; background: none; border: none; color: inherit; cursor: pointer;">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+        notification.className = `notification ${type}`;
+        setTimeout(() => {
+          notification.classList.add("show");
+        }, 100);
+
+        setTimeout(() => {
+          if (notification.classList.contains("show")) {
+            notification.classList.remove("show");
+          }
+        }, 5000);
+      }
+    </script>
+  </body>
+</html>

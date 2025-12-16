@@ -1,0 +1,34 @@
+# System files
+__pycache__/
+*.pyc
+.DS_Store
+
+# Virtual Environment
+venv/
+env/
+
+# Environment Variables (Secrets)
+.env
+
+# Dataset (Too big for GitHub)
+data/
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Logs and Temporary files
+*.log
+training_output/
+runs/
+
+# Large Model Weights (Keep local, do not commit)
+*.pth
+*.onnx
+*.h5
+*.keras
+
+# Database (Local history)
+*.db
+*.sqlite3
+
+# IDE Settings
+.vscode/

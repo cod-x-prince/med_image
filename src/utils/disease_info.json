@@ -1,0 +1,118 @@
+{
+  "Atelectasis": {
+    "curable": "Depends on cause",
+    "medications": [
+      "Chest physiotherapy",
+      "Bronchodilators",
+      "Treatment of underlying cause"
+    ],
+    "affected_regions": "Collapsed lung segments (commonly lower lobes)"
+  },
+  "Cardiomegaly": {
+    "curable": "Depends on underlying heart disease",
+    "medications": [
+      "ACE inhibitors",
+      "Beta-blockers",
+      "Diuretics"
+    ],
+    "affected_regions": "Enlarged cardiac silhouette on chest X‑ray"
+  },
+  "Effusion": {
+    "curable": "Depends on underlying cause",
+    "medications": [
+      "Diuretics",
+      "Thoracentesis (fluid drainage)"
+    ],
+    "affected_regions": "Pleural space adjacent to lung margins"
+  },
+  "Infiltration": {
+    "curable": "Varies by cause",
+    "medications": [
+      "Antibiotics if bacterial",
+      "Anti‑inflammatories"
+    ],
+    "affected_regions": "Areas of increased opacity in lung parenchyma"
+  },
+  "Mass": {
+    "curable": "Depends on nature (benign vs malignant)",
+    "medications": [
+      "Surgical removal",
+      "Oncologic therapies if malignant"
+    ],
+    "affected_regions": "Discrete focal opacity anywhere in lungs"
+  },
+  "Nodule": {
+    "curable": "Often benign; follow‑up imaging",
+    "medications": [
+      "Observation and imaging follow‑up",
+      "Biopsy if suspicious"
+    ],
+    "affected_regions": "Small rounded opacity in lung fields"
+  },
+  "Pneumonia": {
+    "curable": "Yes (with treatment)",
+    "medications": [
+      "Antibiotics (e.g., amoxicillin, azithromycin)",
+      "Oxygen therapy",
+      "Rest and fluids"
+    ],
+    "affected_regions": "Lung parenchyma, often lower lobes"
+  },
+  "Pneumothorax": {
+    "curable": "Yes",
+    "medications": [
+      "Needle aspiration or chest tube insertion",
+      "Supplemental oxygen"
+    ],
+    "affected_regions": "Air in pleural space, lung edge visible"
+  },
+  "Consolidation": {
+    "curable": "Yes (often part of pneumonia)",
+    "medications": [
+      "Antibiotics if infectious",
+      "Supportive care"
+    ],
+    "affected_regions": "Homogeneous increase in lung attenuation"
+  },
+  "Edema": {
+    "curable": "Depends on cardiac function",
+    "medications": [
+      "Diuretics",
+      "Treat underlying heart failure"
+    ],
+    "affected_regions": "Kerley B lines, perihilar haze"
+  },
+  "Emphysema": {
+    "curable": "No (chronic)",
+    "medications": [
+      "Bronchodilators",
+      "Steroids",
+      "Pulmonary rehabilitation"
+    ],
+    "affected_regions": "Hyperlucent lung fields, flattened diaphragms"
+  },
+  "Fibrosis": {
+    "curable": "No (chronic)",
+    "medications": [
+      "Antifibrotic agents",
+      "Oxygen therapy"
+    ],
+    "affected_regions": "Reticular or honeycomb patterns in lung bases"
+  },
+  "Pleural Thickening": {
+    "curable": "Depends on cause",
+    "medications": [
+      "Treat underlying disease",
+      "Surgical decortication in severe cases"
+    ],
+    "affected_regions": "Pleural surfaces, often lateral chest wall"
+  },
+  "Hernia": {
+    "curable": "Yes (surgical repair)",
+    "medications": [
+      "Surgical intervention",
+      "Pain management"
+    ],
+    "affected_regions": "Protrusion of abdominal contents into thorax"
+  }
+}

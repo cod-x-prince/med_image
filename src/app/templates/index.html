@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HemaVision AI - Medical Imaging Analysis</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔬</text></svg>"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <!-- Background Pattern -->
+    <div class="background-pattern"></div>
+
+    <!-- Notification System -->
+    <div class="notification" id="notification"></div>
+
+    <!-- Main Container -->
+    <div class="container">
+      <!-- Professional Header -->
+      <header class="header">
+        <div class="logo">
+          <div class="logo-icon"></div>
+          <span>HemaVision AI</span>
+        </div>
+        <nav class="nav-links">
+          <a href="{{ url_for('index') }}" class="nav-link active">
+            <span class="icon-home"></span> Home
+          </a>
+          <a href="{{ url_for('history') }}" class="nav-link">
+            <span class="icon-history"></span> History
+          </a>
+          <a href="#" class="nav-link">
+            <span class="icon-info"></span> About
+          </a>
+        </nav>
+      </header>
+
+      <!-- Main Content -->
+      <div class="upload-container">
+        <div class="glass-card upload-card fade-in-up">
+          <div class="upload-header text-center mb-6">
+            <h1 class="text-4xl font-bold mb-4 gradient-text">
+              Advanced Medical Imaging Analysis
+            </h1>
+            <p class="text-lg opacity-80">
+              AI-powered diagnostic insights for healthcare professionals
+            </p>
+          </div>
+
+          <form
+            action="{{ url_for('predict_image') }}"
+            method="post"
+            enctype="multipart/form-data"
+            id="upload-form"
+          >
+            <!-- Scan Mode Selector -->
+            <div class="mb-6 p-4 bg-white/5 rounded-xl border border-white/10">
+              <h3 class="text-lg font-semibold mb-4 flex items-center">
+                <span class="icon-scan mr-2"></span> Analysis Mode
+              </h3>
+
+              <div class="mode-options grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Standard Scan -->
+                <label class="mode-option" data-mode="standard">
+                  <input
+                    type="radio"
+                    name="scan_type"
+                    value="standard"
+                    class="hidden"
+                  />
+                  <div
+                    class="glass-card p-4 cursor-pointer transition-all hover:border-primary border-transparent border-2 h-full flex flex-col"
+                  >
+                    <div class="flex items-center mb-3">
+                      <span class="icon-fast text-2xl mr-2">⚡</span>
+                      <h4 class="font-bold">Standard</h4>
+                    </div>
+                    <p class="text-sm opacity-80 mb-3 flex-grow">
+                      Fast 224px routine screening.
+                    </p>
+                    <div class="flex flex-wrap gap-2 text-xs">
+                      <span
+                        class="bg-green-500/20 text-green-400 px-2 py-1 rounded border border-green-500/30"
+                        >AUC: 0.89</span
+                      >
+                      <span
+                        class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30"
+                        >Fast</span
+                      >
+                    </div>
+                  </div>
+                </label>
+
+                <!-- Deep Scan -->
+                <label class="mode-option" data-mode="deep">
+                  <input
+                    type="radio"
+                    name="scan_type"
+                    value="deep"
+                    class="hidden"
+                  />
+                  <div
+                    class="glass-card p-4 cursor-pointer transition-all hover:border-primary border-transparent border-2 h-full flex flex-col"
+                  >
+                    <div class="flex items-center mb-3">
+                      <span class="icon-zoom text-2xl mr-2">🔬</span>
+                      <h4 class="font-bold">Deep Scan</h4>
+                    </div>
+                    <p class="text-sm opacity-80 mb-3 flex-grow">
+                      1024px high-res analysis.
+                    </p>
+                    <div class="flex flex-wrap gap-2 text-xs">
+                      <span
+                        class="bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded border border-yellow-500/30"
+                        >AUC: 0.87</span
+                      >
+                      <span
+                        class="bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded border border-yellow-500/30"
+                        >Slow</span
+                      >
+                    </div>
+                  </div>
+                </label>
+
+                <!-- Ensemble Scan (Recommended) -->
+                <label class="mode-option" data-mode="ensemble">
+                  <input
+                    type="radio"
+                    name="scan_type"
+                    value="ensemble"
+                    checked
+                    class="hidden"
+                  />
+                  <div
+                    class="glass-card p-4 cursor-pointer transition-all hover:border-primary border-primary border-2 h-full flex flex-col bg-primary/10"
+                  >
+                    <div class="flex items-center mb-3">
+                      <span class="icon-star text-2xl mr-2">★</span>
+                      <h4 class="font-bold">Ensemble</h4>
+                      <span
+                        class="ml-auto text-[10px] bg-primary text-white px-2 py-0.5 rounded-full uppercase tracking-wider"
+                        >Best</span
+                      >
+                    </div>
+                    <p class="text-sm opacity-80 mb-3 flex-grow">
+                      Combined Maximum Accuracy.
+                    </p>
+                    <div class="flex flex-wrap gap-2 text-xs">
+                      <span
+                        class="bg-green-500/20 text-green-400 px-2 py-1 rounded border border-green-500/30"
+                        >AUC: 0.90</span
+                      >
+                      <span
+                        class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30"
+                        >Robust</span
+                      >
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Mode Description -->
+              <div
+                id="mode-description"
+                class="mt-4 p-3 bg-black/20 rounded-lg text-sm border-l-4 border-primary"
+              >
+                <p class="font-semibold text-primary mb-1">
+                  Ensemble Scan Selected (Recommended)
+                </p>
+                <p class="opacity-80">
+                  Combines multiple models for highest reliability. Best for
+                  final diagnosis validation.
+                </p>
+              </div>
+            </div>
+
+            <!-- Patient Information Section -->
+            <div class="mb-6 p-4 bg-white/5 rounded-xl border border-white/10">
+              <h3 class="text-lg font-semibold mb-4 flex items-center">
+                <span class="icon-user mr-2"></span> Patient Details
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group">
+                  <label class="block text-sm opacity-80 mb-1"
+                    >Patient ID</label
+                  >
+                  <input
+                    type="text"
+                    name="patient_id"
+                    class="w-full bg-black/20 border border-white/10 rounded px-3 py-2 focus:outline-none focus:border-primary transition-colors"
+                    placeholder="e.g. PID-12345"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="block text-sm opacity-80 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    name="patient_name"
+                    class="w-full bg-black/20 border border-white/10 rounded px-3 py-2 focus:outline-none focus:border-primary transition-colors"
+                    placeholder="e.g. John Doe"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="block text-sm opacity-80 mb-1">Sex</label>
+                  <select
+                    name="patient_sex"
+                    class="w-full bg-black/20 border border-white/10 rounded px-3 py-2 focus:outline-none focus:border-primary transition-colors appearance-none"
+                    required
+                  >
+                    <option value="" disabled selected>Select Sex</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="block text-sm opacity-80 mb-1">Age</label>
+                  <input
+                    type="number"
+                    name="patient_age"
+                    class="w-full bg-black/20 border border-white/10 rounded px-3 py-2 focus:outline-none focus:border-primary transition-colors"
+                    placeholder="e.g. 45"
+                    min="0"
+                    max="120"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="file-input">
+              <input
+                type="file"
+                name="file"
+                id="file-input"
+                accept=".dcm,.dicom,.png,.jpg,.jpeg,.tiff,.tif"
+                required
+              />
+              <label for="file-input" class="file-input-label">
+                <div class="upload-icon icon-upload"></div>
+                <div class="text-center">
+                  <p class="font-semibold text-xl mb-2">Upload Medical Image</p>
+                  <p class="text-sm opacity-60">
+                    Supports DICOM, PNG, JPG, TIFF up to 20MB
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            <div id="file-preview" class="file-preview">
+              <div class="relative inline-block">
+                <img
+                  id="preview-image"
+                  class="preview-image"
+                  alt="Image preview"
+                />
+                <button
+                  type="button"
+                  id="clear-file"
+                  class="btn btn-danger"
+                  style="
+                    position: absolute;
+                    top: 12px;
+                    right: 12px;
+                    padding: 0.5rem 0.75rem;
+                  "
+                >
+                  <span class="icon-close"></span>
+                </button>
+              </div>
+              <p id="file-name" class="mt-3 font-medium text-center"></p>
+            </div>
+
+            <div class="threshold-container">
+              <div class="threshold-header">
+                <span
+                  ><span class="icon-settings"></span> Analysis
+                  Sensitivity</span
+                >
+                <span id="threshold-value" class="font-bold text-lg">0.65</span>
+              </div>
+              <div class="slider-container" id="slider-container">
+                <div class="slider-track"></div>
+                <div
+                  class="slider-thumb"
+                  id="slider-thumb"
+                  style="left: 65%"
+                ></div>
+                <input
+                  type="hidden"
+                  name="threshold"
+                  id="threshold-input"
+                  value="0.65"
+                />
+              </div>
+              <div class="flex justify-between text-xs opacity-60 mt-2">
+                <span>High Specificity</span>
+                <span>Balanced</span>
+                <span>High Sensitivity</span>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              class="btn btn-primary w-full mt-6"
+              id="analyze-btn"
+            >
+              <span class="icon-analyze"></span> Analyze Medical Image
+            </button>
+          </form>
+
+          <div class="mt-8 pt-6 border-t border-white/10">
+            <h3
+              class="text-sm font-semibold mb-4 opacity-60 uppercase tracking-wider"
+            >
+              Quick Access
+            </h3>
+            <div class="quick-actions grid grid-cols-1 md:grid-cols-3 gap-4">
+              <a href="{{ url_for('history') }}" class="btn btn-secondary">
+                <span class="icon-history"></span> Analysis History
+              </a>
+              <button
+                class="btn btn-secondary"
+                onclick="showNotification('Documentation available soon', 'info')"
+              >
+                <span class="icon-docs"></span> Documentation
+              </button>
+              <button
+                class="btn btn-secondary"
+                onclick="showNotification('Support portal launching soon', 'info')"
+              >
+                <span class="icon-support"></span> Support
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Medical Disclaimer Modal -->
+    <div id="disclaimer-modal" class="modal-overlay" style="display: none">
+      <div class="glass-card modal-content fade-in-up">
+        <div class="modal-header mb-6">
+          <div class="icon-doctor text-4xl mb-4"></div>
+          <h2 class="text-2xl font-bold mb-2">Medical Disclaimer</h2>
+        </div>
+        <div class="modal-body text-left mb-6 opacity-90">
+          <p class="mb-4">
+            <strong>Important:</strong> This tool is for
+            <strong>educational and research purposes only</strong>.
+          </p>
+          <ul class="list-disc pl-5 mb-4 space-y-2">
+            <li>
+              It is <strong>NOT</strong> a substitute for professional medical
+              advice, diagnosis, or treatment.
+            </li>
+            <li>
+              Always seek the advice of a physician or other qualified health
+              provider with any questions you may have regarding a medical
+              condition.
+            </li>
+            <li>
+              Do not disregard professional medical advice or delay in seeking
+              it because of something you have read on this website.
+            </li>
+          </ul>
+          <p class="text-sm opacity-70">
+            By clicking "I Understand & Agree", you acknowledge that this AI
+            tool provides probabilistic analysis and may contain errors.
+          </p>
+        </div>
+        <button id="accept-disclaimer" class="btn btn-primary w-full">
+          I Understand & Agree
+        </button>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Disclaimer Modal Logic
+        const disclaimerModal = document.getElementById("disclaimer-modal");
+        const acceptBtn = document.getElementById("accept-disclaimer");
+
+        if (!localStorage.getItem("disclaimerAccepted")) {
+          disclaimerModal.style.display = "flex";
+          document.body.style.overflow = "hidden";
+        }
+
+        acceptBtn.addEventListener("click", function () {
+          localStorage.setItem("disclaimerAccepted", "true");
+          disclaimerModal.style.opacity = "0";
+          setTimeout(() => {
+            disclaimerModal.style.display = "none";
+            document.body.style.overflow = "auto";
+          }, 300);
+        });
+
+        // File Preview System
+        const fileInput = document.getElementById("file-input");
+        const filePreview = document.getElementById("file-preview");
+        const previewImage = document.getElementById("preview-image");
+        const fileName = document.getElementById("file-name");
+        const clearBtn = document.getElementById("clear-file");
+
+        fileInput.addEventListener("change", function () {
+          if (this.files && this.files[0]) {
+            const file = this.files[0];
+            if (file.size > 20 * 1024 * 1024) {
+              showNotification("File size exceeds 20MB limit", "error");
+              this.value = "";
+              return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              previewImage.src = e.target.result;
+              filePreview.classList.add("show");
+              fileName.textContent = file.name;
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+
+        clearBtn.addEventListener("click", function () {
+          fileInput.value = "";
+          filePreview.classList.remove("show");
+          previewImage.src = "";
+          fileName.textContent = "";
+        });
+
+        // Enhanced Drag and Drop
+        const dropArea = document.querySelector(".file-input-label");
+
+        ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+          dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+
+        ["dragenter", "dragover"].forEach((eventName) => {
+          dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ["dragleave", "drop"].forEach((eventName) => {
+          dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+          dropArea.style.borderColor = "var(--primary)";
+          dropArea.style.backgroundColor = "rgba(99, 102, 241, 0.1)";
+        }
+
+        function unhighlight() {
+          dropArea.style.borderColor = "";
+          dropArea.style.backgroundColor = "";
+        }
+
+        dropArea.addEventListener("drop", handleDrop, false);
+
+        function handleDrop(e) {
+          const dt = e.dataTransfer;
+          const files = dt.files;
+          if (files.length) {
+            fileInput.files = files;
+            const event = new Event("change");
+            fileInput.dispatchEvent(event);
+          }
+        }
+
+        // Threshold Slider
+        initThresholdSlider();
+
+        // AJAX Form Submission
+        const uploadForm = document.getElementById("upload-form");
+        const analyzeBtn = document.getElementById("analyze-btn");
+
+        uploadForm.addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          if (!fileInput.files || !fileInput.files[0]) {
+            showNotification(
+              "Please select a medical image to analyze",
+              "error"
+            );
+            return;
+          }
+
+          // Show loading state
+          const originalText = analyzeBtn.innerHTML;
+          analyzeBtn.innerHTML = '<div class="spinner"></div> Analyzing...';
+          analyzeBtn.disabled = true;
+
+          const formData = new FormData(uploadForm);
+
+          try {
+            const response = await fetch("{{ url_for('predict_image') }}", {
+              method: "POST",
+              body: formData,
+            });
+
+            if (!response.ok) {
+              throw new Error(`Upload failed: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.task_id) {
+              pollStatus(data.task_id, analyzeBtn, originalText);
+            } else if (data.redirect) {
+              window.location.href = data.redirect;
+            } else {
+              throw new Error("No task ID or redirect returned");
+            }
+          } catch (error) {
+            console.error("Analysis error:", error);
+            showNotification("Analysis failed. Please try again.", "error");
+            analyzeBtn.innerHTML = originalText;
+            analyzeBtn.disabled = false;
+          }
+        });
+
+        // Show welcome notification
+        setTimeout(() => {
+          showNotification(
+            "Welcome to HemaVision AI - Professional Medical Imaging Analysis",
+            "info"
+          );
+        }, 1000);
+
+        // Mode Selection Logic
+        const modeOptions = document.querySelectorAll(".mode-option");
+        const modeDescription = document.getElementById("mode-description");
+
+        const modeDescriptions = {
+          standard: `
+            <p class="font-semibold text-primary mb-1">Standard Scan Selected</p>
+            <p class="opacity-80">Fast 224px routine screening. Best for high-throughput initial triage.</p>
+            `,
+          deep: `
+            <p class="font-semibold text-warning mb-1">Deep Scan Selected</p>
+            <p class="opacity-80">High-res 1024px analysis. Detects subtle nodules but slower processing.</p>
+            `,
+          ensemble: `
+            <p class="font-semibold text-primary mb-1">Ensemble Scan Selected (Recommended)</p>
+            <p class="opacity-80">Combines multiple models for highest reliability. Best for final diagnosis validation.</p>
+            `,
+        };
+
+        modeOptions.forEach((option) => {
+          option.addEventListener("click", function () {
+            // Update Visuals
+            modeOptions.forEach((opt) => {
+              const card = opt.querySelector(".glass-card");
+              card.classList.remove("border-primary", "bg-primary/10");
+              card.classList.add("border-transparent");
+
+              // Remove "Best" badge visibility if we want dynamic badges, but for now hardcoded in HTML is fine
+            });
+
+            const card = this.querySelector(".glass-card");
+            card.classList.remove("border-transparent");
+            card.classList.add("border-primary", "bg-primary/10");
+
+            // Update Description
+            const mode = this.dataset.mode;
+            modeDescription.innerHTML = modeDescriptions[mode];
+
+            // Input is handled natively by radio button inside label
+          });
+        });
+      });
+
+      // Threshold Slider Implementation
+      function initThresholdSlider() {
+        const sliderContainer = document.getElementById("slider-container");
+        const sliderThumb = document.getElementById("slider-thumb");
+        const thresholdValue = document.getElementById("threshold-value");
+        const thresholdInput = document.getElementById("threshold-input");
+
+        let isDragging = false;
+
+        function updateSliderPosition(clientX) {
+          const rect = sliderContainer.getBoundingClientRect();
+          let position = (clientX - rect.left) / rect.width;
+          position = Math.max(0, Math.min(1, position));
+
+          const percentage = Math.round(position * 100);
+          const value = (position * 0.9 + 0.1).toFixed(2); // Range 0.1 to 1.0
+
+          sliderThumb.style.left = `${percentage}%`;
+          thresholdValue.textContent = value;
+          thresholdInput.value = value;
+        }
+
+        sliderThumb.addEventListener("mousedown", function (e) {
+          isDragging = true;
+          sliderThumb.style.cursor = "grabbing";
+          document.addEventListener("mousemove", onMouseMove);
+          document.addEventListener("mouseup", onMouseUp);
+        });
+
+        sliderContainer.addEventListener("click", function (e) {
+          updateSliderPosition(e.clientX);
+        });
+
+        function onMouseMove(e) {
+          if (!isDragging) return;
+          updateSliderPosition(e.clientX);
+        }
+
+        function onMouseUp() {
+          isDragging = false;
+          sliderThumb.style.cursor = "grab";
+          document.removeEventListener("mousemove", onMouseMove);
+          document.removeEventListener("mouseup", onMouseUp);
+        }
+
+        // Touch support
+        sliderThumb.addEventListener("touchstart", function (e) {
+          isDragging = true;
+          document.addEventListener("touchmove", onTouchMove, {
+            passive: true,
+          });
+          document.addEventListener("touchend", onTouchEnd);
+        });
+
+        function onTouchMove(e) {
+          if (!isDragging) return;
+          updateSliderPosition(e.touches[0].clientX);
+        }
+
+        function onTouchEnd() {
+          isDragging = false;
+          document.removeEventListener("touchmove", onTouchMove);
+          document.removeEventListener("touchend", onTouchEnd);
+        }
+      }
+
+      // Poll Task Status
+      async function pollStatus(taskId, btn, originalText) {
+        const statusUrl = `/task-status/${taskId}`;
+
+        const pollInterval = setInterval(async () => {
+          try {
+            const response = await fetch(statusUrl);
+            const data = await response.json();
+
+            if (data.state === "SUCCESS") {
+              clearInterval(pollInterval);
+              if (data.result && data.result.filename) {
+                window.location.href = `/result/${data.result.filename}`;
+              } else {
+                showNotification("Analysis complete!", "success");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+              }
+            } else if (data.state === "FAILURE") {
+              clearInterval(pollInterval);
+              showNotification(
+                `Analysis failed: ${data.error || "Unknown error"}`,
+                "error"
+              );
+              btn.innerHTML = originalText;
+              btn.disabled = false;
+            }
+          } catch (error) {
+            clearInterval(pollInterval);
+            showNotification("Network error while checking status", "error");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          }
+        }, 1500); // Poll every 1.5 seconds
+      }
+
+      // Notification System
+      function showNotification(message, type = "info", duration = 5000) {
+        const notification = document.getElementById("notification");
+
+        notification.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="icon-${
+              type === "success"
+                ? "check"
+                : type === "error"
+                ? "error"
+                : type === "warning"
+                ? "warning"
+                : "info"
+            }"></span>
+            <span class="flex-1">${message}</span>
+            <button onclick="this.closest('.notification').classList.remove('show')" 
+                    class="control-btn">
+              <span class="icon-close"></span>
+            </button>
+          </div>
+        `;
+
+        notification.className = `notification ${type}`;
+        setTimeout(() => notification.classList.add("show"), 100);
+
+        // Auto-hide
+        const autoHide = setTimeout(() => {
+          if (notification.classList.contains("show")) {
+            notification.classList.remove("show");
+          }
+        }, duration);
+
+        // Stop auto-hide on hover
+        notification.addEventListener("mouseenter", () =>
+          clearTimeout(autoHide)
+        );
+        notification.addEventListener("mouseleave", () => {
+          setTimeout(() => {
+            if (notification.classList.contains("show")) {
+              notification.classList.remove("show");
+            }
+          }, duration);
+        });
+      }
+    </script>
+  </body>
+</html>

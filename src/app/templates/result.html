@@ -1,0 +1,1327 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-6xl mx-auto">
+    <div class="flex flex-col gap-6">
+      <!-- Header -->
+      <header class="text-center mb-8 fade-in-up">
+        <h1 class="text-4xl font-bold mb-4 gradient-text">
+          Diagnostic Analysis Results
+        </h1>
+        <p class="text-lg opacity-80">
+          AI-powered medical imaging insights and predictions
+        </p>
+      </header>
+
+      <!-- Enhanced Clinical Viewer -->
+      <div id="notification" class="notification"></div>
+      <div
+        class="glass-card p-0 overflow-hidden mb-8 fade-in-up"
+        style="animation-delay: 0.1s"
+      >
+        <div
+          class="viewer-controls p-4 flex flex-wrap gap-4 items-center justify-between"
+        >
+          <div class="flex items-center gap-4 flex-wrap">
+            <h3 class="text-lg font-semibold text-white flex items-center">
+              <i class="fas fa-microscope mr-2 text-primary"></i>Diagnostic
+              Workstation
+            </h3>
+
+            <!-- View Mode Selector -->
+            <div
+              class="bg-gray-800/50 rounded-lg p-1 flex backdrop-blur-sm border border-white/10"
+            >
+              <button
+                onclick="setView('original')"
+                class="view-btn active px-4 py-2 text-sm rounded-lg transition-all duration-200"
+                id="btn-original"
+              >
+                <i class="fas fa-image mr-2"></i>Original
+              </button>
+              <button
+                onclick="setView('heatmap')"
+                class="view-btn px-4 py-2 text-sm rounded-lg transition-all duration-200"
+                id="btn-heatmap"
+              >
+                <i class="fas fa-fire mr-2"></i>AI Analysis
+              </button>
+              <button
+                onclick="setView('split')"
+                class="view-btn px-4 py-2 text-sm rounded-lg transition-all duration-200"
+                id="btn-split"
+              >
+                <i class="fas fa-columns mr-2"></i>Split View
+              </button>
+              <button
+                onclick="setView('blend')"
+                class="view-btn px-4 py-2 text-sm rounded-lg transition-all duration-200"
+                id="btn-blend"
+              >
+                <i class="fas fa-layer-group mr-2"></i>Blend
+              </button>
+            </div>
+
+            <!-- Measurement Tools -->
+            <div class="measurement-tools rounded-lg p-1 flex gap-1">
+              <button
+                class="tool-btn p-2 rounded hover:bg-white/10"
+                title="Distance Measurement"
+                onclick="toggleMeasurement('distance')"
+              >
+                <i class="fas fa-ruler"></i>
+              </button>
+              <button
+                class="tool-btn p-2 rounded hover:bg-white/10"
+                title="Angle Measurement"
+                onclick="toggleMeasurement('angle')"
+              >
+                <i class="fas fa-protractor"></i>
+              </button>
+              <button
+                class="tool-btn p-2 rounded hover:bg-white/10"
+                title="Annotation"
+                onclick="toggleAnnotation()"
+              >
+                <i class="fas fa-draw-polygon"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Image Controls -->
+          <div class="flex items-center gap-4 text-sm flex-wrap">
+            <div class="flex flex-col gap-2 w-32">
+              <label class="text-xs text-gray-300 flex justify-between">
+                <span>Brightness</span>
+                <span id="val-brightness">100%</span>
+              </label>
+              <input
+                type="range"
+                min="50"
+                max="150"
+                value="100"
+                class="slider-sm"
+                oninput="updateFilters()"
+                id="input-brightness"
+              />
+            </div>
+            <div class="flex flex-col gap-2 w-32">
+              <label class="text-xs text-gray-300 flex justify-between">
+                <span>Contrast</span>
+                <span id="val-contrast">100%</span>
+              </label>
+              <input
+                type="range"
+                min="50"
+                max="200"
+                value="100"
+                class="slider-sm"
+                oninput="updateFilters()"
+                id="input-contrast"
+              />
+            </div>
+            <div class="flex flex-col gap-2 w-32">
+              <label class="text-xs text-gray-300 flex justify-between">
+                <span>Opacity</span>
+                <span id="val-opacity">50%</span>
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value="50"
+                class="slider-sm"
+                oninput="updateOpacity(this.value)"
+                id="input-opacity"
+              />
+            </div>
+
+            <div class="flex gap-2">
+              <button
+                onclick="toggleInvert()"
+                class="control-btn p-3 rounded-lg"
+                title="Invert Colors"
+                id="btn-invert"
+              >
+                <i class="fas fa-adjust"></i>
+              </button>
+              <button
+                onclick="resetFilters()"
+                class="control-btn p-3 rounded-lg"
+                title="Reset All Filters"
+              >
+                <i class="fas fa-undo"></i>
+              </button>
+              <button
+                onclick="toggleFullscreen()"
+                class="control-btn p-3 rounded-lg"
+                title="Fullscreen"
+              >
+                <i class="fas fa-expand"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Viewer -->
+        <div
+          class="relative h-[600px] bg-gradient-to-br from-gray-900 to-black w-full flex justify-center items-center overflow-hidden group"
+          id="viewer-container"
+        >
+          <!-- Base Image -->
+          <img
+            src="{{ image_path }}"
+            id="img-layer-base"
+            class="absolute h-full w-auto object-contain transition-all duration-300"
+            crossorigin="anonymous"
+          />
+
+          <!-- Heatmap Overlay -->
+          <div
+            id="heatmap-wrapper"
+            class="absolute inset-0 flex justify-center items-center pointer-events-none"
+          >
+            <img
+              src="{{ heatmap_url }}"
+              id="img-layer-overlay"
+              class="h-full w-auto object-contain opacity-0 transition-all duration-300 mix-blend-multiply"
+              crossorigin="anonymous"
+            />
+          </div>
+
+          <!-- Split View Slider -->
+          <div
+            id="slider-handle"
+            class="absolute top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-cyan-500 cursor-ew-resize hidden z-20 shadow-lg"
+          >
+            <div
+              class="absolute top-1/2 -translate-y-1/2 -left-3 w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center shadow-xl border-2 border-white"
+            >
+              <i class="fas fa-arrows-alt-h text-white text-xs"></i>
+            </div>
+          </div>
+
+          <!-- Zoom Controls -->
+          <div
+            class="zoom-controls absolute bottom-4 left-4 rounded-lg p-2 flex flex-col gap-2 z-10"
+          >
+            <button
+              class="control-btn p-2 rounded"
+              onclick="zoomIn()"
+              title="Zoom In"
+            >
+              <i class="fas fa-search-plus"></i>
+            </button>
+            <button
+              class="control-btn p-2 rounded"
+              onclick="zoomOut()"
+              title="Zoom Out"
+            >
+              <i class="fas fa-search-minus"></i>
+            </button>
+            <button
+              class="control-btn p-2 rounded"
+              onclick="resetZoom()"
+              title="Reset Zoom"
+            >
+              <i class="fas fa-expand-arrows-alt"></i>
+            </button>
+          </div>
+
+          <!-- Patient Info -->
+          <div
+            class="patient-info-panel absolute top-4 right-4 rounded-xl p-4 z-10 min-w-48"
+          >
+            <h4 class="font-semibold text-white mb-3 flex items-center">
+              <i class="fas fa-user-injured mr-2 text-primary"></i>Patient Info
+            </h4>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-400">ID:</span>
+                <span class="text-white font-mono"
+                  >{{ metadata.get('Patient ID', 'N/A') }}</span
+                >
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">View:</span>
+                <span class="text-white"
+                  >{{ metadata.get('View Position', 'PA') }}</span
+                >
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Sex:</span>
+                <span class="text-white">{{ metadata.get('Sex', 'N/A') }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Age:</span>
+                <span class="text-white">{{ metadata.get('Age', 'N/A') }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- View Mode Indicator -->
+          <div
+            class="absolute top-4 left-4 bg-black/70 text-white px-3 py-2 rounded-lg text-sm font-semibold z-10 backdrop-blur-sm border border-white/10"
+            id="view-mode-indicator"
+          >
+            Original View
+          </div>
+
+          <!-- Measurement Canvas -->
+          <canvas
+            id="measurement-canvas"
+            class="absolute inset-0 pointer-events-none z-10"
+            width="1200"
+            height="600"
+          ></canvas>
+        </div>
+
+        <!-- Viewer Status Bar -->
+        <div
+          class="bg-gray-900/80 px-4 py-2 border-t border-white/10 flex justify-between items-center text-xs text-gray-400"
+        >
+          <div class="flex items-center gap-4">
+            <span>Zoom: <span id="zoom-level">100%</span></span>
+            <span>|</span>
+            <span>Image: <span id="image-dimensions">Loading...</span></span>
+          </div>
+          <div class="flex items-center gap-4">
+            <span
+              >Press
+              <kbd class="px-1 py-0.5 bg-gray-800 rounded text-xs">Space</kbd> +
+              Drag to pan</span
+            >
+            <span>|</span>
+            <span>Scroll to zoom</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prediction Table -->
+      <div class="glass-card p-6 mt-8 fade-in-up" style="animation-delay: 0.3s">
+        <h3 class="text-2xl font-bold mb-6 gradient-text flex items-center">
+          <i class="fas fa-clipboard-check mr-3 text-accent"></i> Diagnostic
+          Prediction Summary
+        </h3>
+
+        <div class="overflow-x-auto">
+          <table class="prediction-table">
+            <thead>
+              <tr>
+                <th>Medical Condition</th>
+                <th>Raw Value</th>
+                <th>Probability</th>
+                <th>Safe Range</th>
+                <th>Confidence Level</th>
+                <th>Clinical Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for label, prob_str, raw_val in prediction %}
+              <tr>
+                <td class="font-semibold condition-name">{{ label }}</td>
+
+                <!-- Raw Value -->
+                <td class="raw-value-cell">
+                  <span class="font-mono text-sm bg-white/5 px-2 py-1 rounded">
+                    {{ "%.4f"|format(raw_val) }}
+                  </span>
+                </td>
+
+                <!-- Probability -->
+                <td class="probability-cell">
+                  <span class="font-mono text-lg font-bold"
+                    >{{ prob_str }}</span
+                  >
+                  <div class="text-xs opacity-60 mt-1">
+                    {{ (raw_val * 100)|round(1) }}%
+                  </div>
+                </td>
+
+                <!-- Safe Range -->
+                <td class="safe-range-cell">
+                  {% if label in safe_ranges %} {% set safe_range =
+                  safe_ranges[label] %}
+                  <div class="text-sm">
+                    {% if safe_range.direction == 'below' %}
+                    <span class="text-success"
+                      >Normal: &lt; {{ "%.3f"|format(safe_range.val) }}</span
+                    >
+                    <div class="text-xs opacity-60 mt-1">
+                      Above {{ "%.3f"|format(safe_range.val) }} → Elevated
+                    </div>
+                    {% else %}
+                    <span class="text-success"
+                      >Normal: &gt; {{ "%.3f"|format(safe_range.val) }}</span
+                    >
+                    <div class="text-xs opacity-60 mt-1">
+                      Below {{ "%.3f"|format(safe_range.val) }} → Low Risk
+                    </div>
+                    {% endif %}
+                  </div>
+                  {% else %}
+                  <span class="text-gray text-sm opacity-60">Not defined</span>
+                  {% endif %}
+                </td>
+
+                <!-- Confidence Level -->
+                <td class="confidence-cell">
+                  <div class="confidence-bar">
+                    {% if raw_val > 0.5 %}
+                    <div
+                      class="confidence-fill confidence-high"
+                      style="--confidence-width: {{ raw_val * 100 }}%"
+                    ></div>
+                    {% elif raw_val > 0.2 %}
+                    <div
+                      class="confidence-fill confidence-medium"
+                      style="--confidence-width: {{ raw_val * 100 }}%"
+                    ></div>
+                    {% else %}
+                    <div
+                      class="confidence-fill confidence-low"
+                      style="--confidence-width: {{ raw_val * 100 }}%"
+                    ></div>
+                    {% endif %}
+                  </div>
+                  <div class="text-xs opacity-60 mt-1 flex justify-between">
+                    <span>Confidence</span>
+                    <span>{{ (raw_val * 100)|round(1) }}%</span>
+                  </div>
+                </td>
+
+                <!-- Clinical Status -->
+                <td class="status-cell">
+                <!-- Clinical Status -->
+                <td class="status-cell">
+                  {% if label in safe_ranges %} 
+                    {% set safe_range = safe_ranges[label] %} 
+                    {% if safe_range.direction == 'below' %}
+                      {% if raw_val < safe_range.val %}
+                        <span class="status-badge status-normal">
+                          <i class="fas fa-check-circle"></i> Normal
+                        </span>
+                        <div class="text-xs opacity-60 mt-1">Within safe range</div>
+                      {% else %}
+                        <span class="status-badge status-elevated">
+                          <i class="fas fa-exclamation-triangle"></i> Elevated
+                        </span>
+                        <div class="text-xs opacity-60 mt-1">Above threshold</div>
+                      {% endif %} 
+                    {% else %} 
+                      <!-- Direction is 'above' or other -->
+                      {% if raw_val > safe_range.val %}
+                        <span class="status-badge status-detected">
+                          <i class="fas fa-exclamation-circle"></i> Detected
+                        </span>
+                        <div class="text-xs opacity-60 mt-1">Condition present</div>
+                      {% else %}
+                        <span class="status-badge status-normal">
+                          <i class="fas fa-check-circle"></i> Low Risk
+                        </span>
+                        <div class="text-xs opacity-60 mt-1">Below detection level</div>
+                      {% endif %} 
+                    {% endif %} 
+                  {% else %}
+                    <!-- No safe range defined -->
+                    <span class="status-badge status-unknown">
+                      <i class="fas fa-question-circle"></i> Unknown
+                    </span>
+                    <div class="text-xs opacity-60 mt-1">No reference data</div>
+                  {% endif %}
+                </td>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="action-buttons mt-8">
+          {% if pdf_path %}
+          <a href="{{ pdf_path }}" class="btn btn-primary" download>
+            <i class="fas fa-file-pdf mr-2"></i> Download Medical Report
+          </a>
+          {% endif %}
+
+          <a href="{{ url_for('index') }}" class="btn btn-secondary">
+            <i class="fas fa-plus mr-2"></i> New Analysis
+          </a>
+
+          <a href="{{ url_for('history') }}" class="btn btn-secondary">
+            <i class="fas fa-history mr-2"></i> View History
+          </a>
+        </div>
+
+        <!-- Analysis Summary -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-4 bg-black/20 rounded-xl border border-white/10">
+            <h4 class="font-semibold mb-2 flex items-center text-sm">
+              <i class="fas fa-calculator mr-2 text-primary"></i> Analysis
+              Metrics
+            </h4>
+            <div class="text-xs space-y-1 opacity-80">
+              <div class="flex justify-between">
+                <span>Total Conditions:</span>
+                <span>{{ prediction|length }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>High Confidence:</span>
+                <span class="text-success"
+                  >{{ prediction|selectattr("2", ">", 0.5)|list|length }}</span
+                >
+              </div>
+              <div class="flex justify-between">
+                <span>Elevated/Detected:</span>
+                <span class="text-warning">
+                  {% set elevated_count = 0 %} {% for label, prob_str, raw_val
+                  in prediction %} {% if label in safe_ranges %} {% set
+                  safe_range = safe_ranges[label] %} {% if (safe_range.direction
+                  == 'below' and raw_val >= safe_range.val) or
+                  (safe_range.direction == 'above' and raw_val <=
+                  safe_range.val) %} {% set elevated_count = elevated_count + 1
+                  %} {% endif %} {% endif %} {% endfor %} {{ elevated_count }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 bg-black/20 rounded-xl border border-white/10">
+            <h4 class="font-semibold mb-2 flex items-center text-sm">
+              <i class="fas fa-clock mr-2 text-primary"></i> Processing Info
+            </h4>
+            <div class="text-xs space-y-1 opacity-80">
+              <div class="flex justify-between">
+                <span>Analysis Time:</span>
+                <span>{{ analysis_time if analysis_time else "N/A" }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Model Version:</span>
+                <span>v2.1.4</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Threshold:</span>
+                <span>{{ threshold if threshold else "0.65" }}</span>
+              </div>
+            </div>
+          </div>
+
+              This analysis is generated by AI and should be reviewed by a
+              qualified healthcare professional. Results are based on pattern
+              recognition and statistical probabilities. Raw values represent
+              model confidence scores.
+            </p>
+          </div>
+          
+          <!-- Scan Metadata -->
+          <div class="p-4 bg-black/20 rounded-xl border border-white/10">
+            <h4 class="font-semibold mb-2 flex items-center text-sm">
+                <i class="fas fa-server mr-2 text-primary"></i> Scan Configuration
+            </h4>
+            <div class="text-xs space-y-1 opacity-80">
+                <div class="flex justify-between">
+                    <span>Scan Type:</span>
+                    <span class="uppercase font-bold text-accent">{{ metadata.get('scan_type', 'Standard') }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Model Used:</span>
+                    <span class="truncate w-32 text-right" title="{{ metadata.get('model_used', 'N/A') }}">{{ metadata.get('model_used', 'N/A') }}</span>
+                </div>
+                 <div class="flex justify-between">
+                    <span>Inference Time:</span>
+                    <span>{{ metadata.get('inference_time', 'N/A') }}</span>
+                </div>
+                 <div class="flex justify-between">
+                    <span>AUC Score:</span>
+                    <span>{{ metadata.get('auc_score', 'N/A') }}</span>
+                </div>
+            </div>
+          </div>
+          
+          <!-- Rescan Options -->
+          <div class="p-4 bg-black/20 rounded-xl border border-white/10 col-span-1 md:col-span-2">
+            <h4 class="font-semibold mb-2 flex items-center text-sm">
+                <i class="fas fa-sync-alt mr-2 text-primary"></i> Advanced Re-Scan
+            </h4>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ url_for('rescan', filename=filename, scan_type='standard') }}" class="btn btn-sm btn-secondary text-xs">
+                    <i class="fas fa-bolt mr-1"></i> Standard
+                </a>
+                <a href="{{ url_for('rescan', filename=filename, scan_type='deep') }}" class="btn btn-sm btn-secondary text-xs">
+                    <i class="fas fa-microscope mr-1"></i> Deep Scan
+                </a>
+                <a href="{{ url_for('rescan', filename=filename, scan_type='ensemble') }}" class="btn btn-sm btn-primary text-xs">
+                    <i class="fas fa-layer-group mr-1"></i> Ensemble (Best)
+                </a>
+            </div>
+             <p class="text-[10px] opacity-60 mt-2">
+                Re-running analysis may overwrite existing heatmaps but will preserve history.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3D Density Visualization -->
+      <div class="glass-card p-6 mt-8 fade-in-up" style="animation-delay: 0.4s">
+        <header class="flex justify-between items-center mb-4">
+          <h3 class="text-2xl font-bold gradient-text flex items-center">
+            <i class="fas fa-cube mr-3 text-secondary"></i> 3D Density
+            Topography
+          </h3>
+          <div class="text-sm text-gray-400">
+            <i class="fas fa-mouse mr-2"></i> Interactive Model
+          </div>
+        </header>
+
+        <!-- Debug Info -->
+        <div
+          id="debug-info"
+          class="mb-4 p-3 bg-yellow-900/30 rounded text-sm hidden"
+        >
+          <div id="debug-content"></div>
+        </div>
+
+        <div
+          id="xray-3d-container"
+          class="w-full h-[500px] rounded-lg overflow-hidden shadow-2xl border border-white/10 relative bg-black/40"
+        >
+          <!-- Loading State -->
+          <div
+            id="loading-3d"
+            class="absolute inset-0 flex items-center justify-center bg-slate-900/80 z-20"
+          >
+            <div class="text-center">
+              <div class="spinner mb-4"></div>
+              <p>Loading 3D Visualization...</p>
+            </div>
+          </div>
+
+          <!-- Error State -->
+          <div
+            id="error-3d"
+            class="absolute inset-0 flex items-center justify-center bg-red-900/80 z-20 hidden"
+          >
+            <div class="text-center p-4">
+              <i
+                class="fas fa-exclamation-triangle text-3xl text-red-400 mb-2"
+              ></i>
+              <p class="text-red-200">Failed to load 3D visualization</p>
+              <button onclick="retry3D()" class="mt-2 btn btn-danger">
+                Retry
+              </button>
+            </div>
+          </div>
+
+          <!-- Controls Guide -->
+          <div
+            class="absolute top-4 left-4 z-10 bg-black/70 p-3 rounded text-xs backdrop-blur-sm border border-white/10"
+          >
+            <p class="font-bold mb-1">🖱️ Controls:</p>
+            <p class="mb-1">• Left Click + Drag: Rotate</p>
+            <p class="mb-1">• Right Click + Drag: Pan</p>
+            <p>• Scroll: Zoom</p>
+          </div>
+        </div>
+
+        <!-- 3D Settings Panel -->
+        <div class="mt-4 p-4 bg-black/20 rounded-lg border border-white/10">
+          <h4 class="font-semibold mb-3 text-sm">3D Settings</h4>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label class="block text-xs mb-2 opacity-80">Height Scale</label>
+              <input
+                type="range"
+                id="height-scale"
+                min="1"
+                max="20"
+                value="10"
+                class="w-full accent-primary"
+                oninput="updateHeightScale(this.value)"
+              />
+              <div class="flex justify-between text-xs opacity-60 mt-1">
+                <span>Flat</span>
+                <span id="height-value">10</span>
+                <span>Deep</span>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs mb-2 opacity-80"
+                >Rotation Speed</label
+              >
+              <input
+                type="range"
+                id="rotation-speed"
+                min="0"
+                max="2"
+                step="0.1"
+                value="0"
+                class="w-full accent-primary"
+                oninput="updateRotationSpeed(this.value)"
+              />
+              <div class="flex justify-between text-xs opacity-60 mt-1">
+                <span>Stop</span>
+                <span id="rotation-value">0</span>
+                <span>Fast</span>
+              </div>
+            </div>
+            <div class="flex items-end">
+              <button
+                onclick="toggleWireframe()"
+                class="w-full btn btn-secondary text-sm py-2"
+              >
+                <i class="fas fa-border-all mr-2"></i> Toggle Wireframe
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clinical Viewer JavaScript -->
+    <script>
+      // Enhanced Clinical Viewer with Professional Features
+      let currentView = "original";
+      let isInverted = false;
+      let isPanning = false;
+      let startX, startY;
+      let scrollLeft, scrollTop;
+      let zoom = 1;
+      let panX = 0,
+        panY = 0;
+
+      // Elements
+      const baseImg = document.getElementById("img-layer-base");
+      const overlayImg = document.getElementById("img-layer-overlay");
+      const heatmapWrapper = document.getElementById("heatmap-wrapper");
+      const sliderHandle = document.getElementById("slider-handle");
+      const viewer = document.getElementById("viewer-container");
+      const viewModeIndicator = document.getElementById("view-mode-indicator");
+      const zoomLevel = document.getElementById("zoom-level");
+      const imageDimensions = document.getElementById("image-dimensions");
+
+      // Initialize viewer
+      function initViewer() {
+        // Load image dimensions
+        baseImg.onload = function () {
+          imageDimensions.textContent = `${this.naturalWidth} × ${this.naturalHeight}`;
+        };
+
+        baseImg.onerror = function () {
+          showNotification(
+            "Failed to load main image. Please re-upload.",
+            "error"
+          );
+          imageDimensions.textContent = "Error";
+        };
+
+        // Set up panning
+        viewer.addEventListener("mousedown", startPan);
+        viewer.addEventListener("mousemove", doPan);
+        viewer.addEventListener("mouseup", endPan);
+        viewer.addEventListener("mouseleave", endPan);
+
+        // Set up touch events for mobile
+        viewer.addEventListener("touchstart", handleTouchStart, {
+          passive: true,
+        });
+        viewer.addEventListener("touchmove", handleTouchMove, {
+          passive: false,
+        });
+        viewer.addEventListener("touchend", endPan);
+
+        // Keyboard shortcuts
+        document.addEventListener("keydown", handleKeyDown);
+        document.addEventListener("keyup", handleKeyUp);
+
+        // Initial setup
+        updateViewer();
+      }
+
+      // 1. Enhanced View Switching
+      function setView(view) {
+        currentView = view;
+
+        // Update UI buttons
+        document
+          .querySelectorAll(".view-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document.getElementById(`btn-${view}`).classList.add("active");
+
+        // Reset states
+        overlayImg.style.opacity = "0";
+        sliderHandle.style.display = "none";
+        heatmapWrapper.style.clipPath = "none";
+        heatmapWrapper.style.mixBlendMode = "multiply";
+
+        // Update view mode indicator
+        const viewNames = {
+          original: "Original View",
+          heatmap: "AI Analysis View",
+          split: "Split Comparison",
+          blend: "Blended Overlay",
+        };
+        viewModeIndicator.textContent = viewNames[view];
+
+        if (view === "original") {
+          // Base image only
+        } else if (view === "heatmap") {
+          overlayImg.style.opacity = "1";
+          heatmapWrapper.style.mixBlendMode = "multiply";
+        } else if (view === "split") {
+          overlayImg.style.opacity = "1";
+          sliderHandle.style.display = "block";
+          sliderHandle.style.left = "50%";
+          updateSplit(viewer.clientWidth / 2);
+        } else if (view === "blend") {
+          overlayImg.style.opacity = "0.7";
+          heatmapWrapper.style.mixBlendMode = "screen";
+        }
+
+        updateViewer();
+      }
+
+      // 2. Enhanced Split View with Touch Support
+      let isDragging = false;
+
+      sliderHandle.addEventListener("mousedown", () => (isDragging = true));
+      sliderHandle.addEventListener("touchstart", () => (isDragging = true), {
+        passive: true,
+      });
+      window.addEventListener("mouseup", () => (isDragging = false));
+      window.addEventListener("touchend", () => (isDragging = false));
+
+      viewer.addEventListener("mousemove", handleSplitMove);
+      viewer.addEventListener("touchmove", handleSplitMove, { passive: false });
+
+      function handleSplitMove(e) {
+        if (!isDragging && currentView !== "split") return;
+
+        const rect = viewer.getBoundingClientRect();
+        const x = e.clientX
+          ? e.clientX - rect.left
+          : e.touches[0].clientX - rect.left;
+
+        if (isDragging) {
+          const clampedX = Math.max(50, Math.min(rect.width - 50, x));
+          sliderHandle.style.left = `${clampedX}px`;
+          updateSplit(clampedX);
+        }
+      }
+
+      function updateSplit(x) {
+        const percentage = (x / viewer.clientWidth) * 100;
+        heatmapWrapper.style.clipPath = `polygon(${percentage}% 0, 100% 0, 100% 100%, ${percentage}% 100%)`;
+      }
+
+      // 3. Enhanced Filter Controls
+      function updateFilters() {
+        const brightness = document.getElementById("input-brightness").value;
+        const contrast = document.getElementById("input-contrast").value;
+
+        // Update labels
+        document.getElementById(
+          "val-brightness"
+        ).textContent = `${brightness}%`;
+        document.getElementById("val-contrast").textContent = `${contrast}%`;
+
+        // Build filter string
+        let filterStr = `brightness(${brightness}%) contrast(${contrast}%)`;
+        if (isInverted) filterStr += " invert(1)";
+
+        // Apply filters
+        baseImg.style.filter = filterStr;
+        overlayImg.style.filter = filterStr;
+      }
+
+      function updateOpacity(value) {
+        document.getElementById("val-opacity").textContent = `${value}%`;
+        overlayImg.style.opacity = `${value / 100}`;
+      }
+
+      function toggleInvert() {
+        isInverted = !isInverted;
+        const btn = document.getElementById("btn-invert");
+        btn.classList.toggle("active", isInverted);
+        updateFilters();
+      }
+
+      function resetFilters() {
+        document.getElementById("input-brightness").value = 100;
+        document.getElementById("input-contrast").value = 100;
+        document.getElementById("input-opacity").value = 50;
+        isInverted = false;
+
+        const btn = document.getElementById("btn-invert");
+        btn.classList.remove("active");
+
+        updateFilters();
+        updateOpacity(50);
+      }
+
+      // 4. Enhanced Zoom and Pan System
+      function zoomIn() {
+        zoom = Math.min(3, zoom + 0.25);
+        updateViewer();
+      }
+
+      function zoomOut() {
+        zoom = Math.max(1, zoom - 0.25);
+        updateViewer();
+      }
+
+      function resetZoom() {
+        zoom = 1;
+        panX = 0;
+        panY = 0;
+        updateViewer();
+      }
+
+      function updateViewer() {
+        const transform = `scale(${zoom}) translate(${panX}px, ${panY}px)`;
+        baseImg.style.transform = transform;
+        heatmapWrapper.style.transform = transform;
+        zoomLevel.textContent = `${Math.round(zoom * 100)}%`;
+      }
+
+      // Panning functionality
+      function startPan(e) {
+        if (e.type === "mousedown") {
+          isPanning = true;
+          startX = e.pageX - viewer.offsetLeft;
+          startY = e.pageY - viewer.offsetTop;
+          scrollLeft = panX;
+          scrollTop = panY;
+        }
+        viewer.style.cursor = "grabbing";
+      }
+
+      function doPan(e) {
+        if (!isPanning) return;
+        e.preventDefault();
+
+        const x = e.pageX - viewer.offsetLeft;
+        const y = e.pageY - viewer.offsetTop;
+        const walkX = (x - startX) * 2;
+        const walkY = (y - startY) * 2;
+
+        panX = scrollLeft + walkX;
+        panY = scrollTop + walkY;
+
+        updateViewer();
+      }
+
+      function endPan() {
+        isPanning = false;
+        viewer.style.cursor = "grab";
+      }
+
+      // Touch support
+      function handleTouchStart(e) {
+        if (e.touches.length === 1) {
+          startPan({
+            pageX: e.touches[0].pageX,
+            pageY: e.touches[0].pageY,
+            type: "mousedown",
+          });
+        }
+      }
+
+      function handleTouchMove(e) {
+        if (e.touches.length === 1 && isPanning) {
+          doPan({
+            pageX: e.touches[0].pageX,
+            pageY: e.touches[0].pageY,
+            preventDefault: () => e.preventDefault(),
+          });
+        }
+      }
+
+      // 5. Keyboard Shortcuts
+      let spacePressed = false;
+
+      function handleKeyDown(e) {
+        if (e.code === "Space" && !spacePressed) {
+          spacePressed = true;
+          viewer.style.cursor = "grab";
+          e.preventDefault();
+        }
+
+        // Zoom with +/-
+        if (e.key === "+" || e.key === "=") {
+          zoomIn();
+          e.preventDefault();
+        } else if (e.key === "-" || e.key === "_") {
+          zoomOut();
+          e.preventDefault();
+        } else if (e.key === "0") {
+          resetZoom();
+          e.preventDefault();
+        }
+      }
+
+      function handleKeyUp(e) {
+        if (e.code === "Space") {
+          spacePressed = false;
+          viewer.style.cursor = "default";
+        }
+      }
+
+      // 6. Fullscreen Support
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          viewer.requestFullscreen().catch((err) => {
+            console.error(
+              `Error attempting to enable fullscreen: ${err.message}`
+            );
+          });
+        } else {
+          document.exitFullscreen();
+        }
+      }
+
+      // 7. Measurement Tools (Basic Implementation)
+      function toggleMeasurement(type) {
+        showNotification(
+          `${
+            type.charAt(0).toUpperCase() + type.slice(1)
+          } measurement tool activated`,
+          "info"
+        );
+        // Implementation for measurement tools would go here
+      }
+
+      function toggleAnnotation() {
+        showNotification("Annotation tool activated", "info");
+        // Implementation for annotation tools would go here
+      }
+
+      // 8. Enhanced Wheel Zoom with Smoothness
+      viewer.addEventListener(
+        "wheel",
+        (e) => {
+          e.preventDefault();
+
+          const rect = viewer.getBoundingClientRect();
+          const mouseX = e.clientX - rect.left;
+          const mouseY = e.clientY - rect.top;
+
+          const zoomIntensity = 0.001;
+          const wheel = e.deltaY < 0 ? 1 : -1;
+          const zoomFactor = wheel * zoomIntensity;
+
+          const newZoom = Math.min(3, Math.max(1, zoom + zoomFactor));
+
+          if (newZoom !== zoom) {
+            // Calculate mouse position relative to image
+            const imageX = (mouseX - panX) / zoom;
+            const imageY = (mouseY - panY) / zoom;
+
+            zoom = newZoom;
+
+            // Adjust pan to zoom toward mouse position
+            panX = mouseX - imageX * zoom;
+            panY = mouseY - imageY * zoom;
+
+            updateViewer();
+          }
+        },
+        { passive: false }
+      );
+
+      // Initialize when DOM is ready
+      document.addEventListener("DOMContentLoaded", initViewer);
+    </script>
+
+    <!-- 3D Visualization JavaScript -->
+    <script type="module">
+      import * as THREE from "https://cdn.skypack.dev/three@0.132.2";
+      import { OrbitControls } from "https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/OrbitControls.js";
+
+      let scene, camera, renderer, controls, planeMesh;
+      let isWireframe = false;
+      let rotationSpeed = 0;
+      const container = document.getElementById("xray-3d-container");
+
+      // Fix image path - use url_for to generate correct path
+      const imageUrl = "{{ image_path }}";
+
+      const loadingElement = document.getElementById("loading-3d");
+      const errorElement = document.getElementById("error-3d");
+      const debugElement = document.getElementById("debug-info");
+      const debugContent = document.getElementById("debug-content");
+
+      function showError(message) {
+        console.error("3D Error:", message);
+        loadingElement.classList.add("hidden");
+        errorElement.classList.remove("hidden");
+        debugElement.classList.remove("hidden");
+        debugContent.innerHTML = `<strong>Error:</strong> ${message}`;
+      }
+
+      function hideLoading() {
+        loadingElement.classList.add("hidden");
+      }
+
+      function retry3D() {
+        errorElement.classList.add("hidden");
+        loadingElement.classList.remove("hidden");
+        debugElement.classList.add("hidden");
+        init3D();
+      }
+
+      async function init3D() {
+        // Ensure THREE is loaded
+        if (typeof THREE === 'undefined') {
+            try {
+                const module = await import("https://cdn.skypack.dev/three@0.132.2");
+                window.THREE = module;
+                window.OrbitControls = (await import("https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/OrbitControls.js")).OrbitControls;
+            } catch (e) {
+                console.warn("Primary CDN failed, trying fallback...", e);
+                try {
+                    // Fallback to unpkg
+                    const module = await import("https://unpkg.com/three@0.132.2/build/three.module.js");
+                    window.THREE = module;
+                    // Note: OrbitControls might need separate handling for unpkg if not bundled
+                } catch (e2) {
+                    showError("Failed to load 3D library");
+                    return;
+                }
+            }
+        }
+
+        try {
+          console.log("🚀 Initializing 3D visualization...");
+          console.log("📁 Image URL:", imageUrl);
+
+          // Setup Scene
+          scene = new THREE.Scene();
+          scene.background = new THREE.Color(0x0a0a0a);
+
+          // Camera
+          camera = new THREE.PerspectiveCamera(
+            75,
+            container.clientWidth / container.clientHeight,
+            0.1,
+            1000
+          );
+          camera.position.set(0, -40, 50);
+
+          // Renderer
+          renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true,
+          });
+          renderer.setSize(container.clientWidth, container.clientHeight);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+          // Clear existing canvas
+          const existingCanvas = container.querySelector("canvas");
+          if (existingCanvas) {
+            container.removeChild(existingCanvas);
+          }
+          container.appendChild(renderer.domElement);
+
+          // Controls
+          controls = new OrbitControls(camera, renderer.domElement);
+          controls.enableDamping = true;
+          controls.dampingFactor = 0.05;
+
+          // Load texture and create mesh
+          const loader = new THREE.TextureLoader();
+
+          await new Promise((resolve, reject) => {
+            loader.load(
+              imageUrl,
+              function (texture) {
+                console.log("✅ Texture loaded successfully");
+
+                const geometry = new THREE.PlaneGeometry(60, 60, 128, 128);
+                const material = new THREE.MeshStandardMaterial({
+                  color: 0xffffff,
+                  map: texture,
+                  displacementMap: texture,
+                  displacementScale: 10,
+                  roughness: 0.4,
+                  metalness: 0.6,
+                  wireframe: isWireframe,
+                });
+
+                planeMesh = new THREE.Mesh(geometry, material);
+                planeMesh.rotation.x = -Math.PI / 4;
+                scene.add(planeMesh);
+
+                // Add Lights
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+                scene.add(ambientLight);
+
+                const pointLight = new THREE.PointLight(0x3b82f6, 1.5);
+                pointLight.position.set(20, 20, 50);
+                scene.add(pointLight);
+
+                const directionalLight = new THREE.DirectionalLight(
+                  0xffffff,
+                  0.8
+                );
+                directionalLight.position.set(0, 10, 10);
+                scene.add(directionalLight);
+
+                resolve();
+              },
+              undefined,
+              function (err) {
+                reject(new Error(`Failed to load texture: ${err.message}`));
+              }
+            );
+          });
+
+          // Start animation
+          animate();
+          hideLoading();
+          console.log("✅ 3D visualization ready");
+        } catch (error) {
+          showError(error.message);
+        }
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        if (planeMesh && rotationSpeed > 0) {
+          planeMesh.rotation.y += rotationSpeed * 0.01;
+        }
+
+        if (controls) controls.update();
+        if (renderer && scene && camera) renderer.render(scene, camera);
+      }
+
+      // Global functions for UI controls
+      window.updateHeightScale = function (value) {
+        if (planeMesh) {
+          planeMesh.material.displacementScale = parseFloat(value);
+          document.getElementById("height-value").textContent = value;
+        }
+      };
+
+      window.updateRotationSpeed = function (value) {
+        rotationSpeed = parseFloat(value);
+        document.getElementById("rotation-value").textContent = value;
+      };
+
+      window.toggleWireframe = function () {
+        if (planeMesh) {
+          isWireframe = !isWireframe;
+          planeMesh.material.wireframe = isWireframe;
+        }
+      };
+
+      window.retry3D = retry3D;
+
+      // Handle Resize
+      window.addEventListener("resize", () => {
+        if (camera && renderer && container) {
+          camera.aspect = container.clientWidth / container.clientHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+      });
+
+      // Initialize when DOM is ready
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init3D);
+      } else {
+        init3D();
+      }
+    </script>
+
+    <!-- Utility JavaScript -->
+    <script>
+      // Enhanced Notification System
+      function showNotification(message, type = "info", duration = 5000) {
+        const notification = document.getElementById("notification");
+        const icons = {
+          success: "check-circle",
+          warning: "exclamation-triangle",
+          error: "times-circle",
+          info: "info-circle",
+        };
+
+        notification.innerHTML = `
+            <div class="flex items-center gap-3">
+                <i class="fas fa-${icons[type]} text-lg"></i>
+                <span class="flex-1">${message}</span>
+                <button onclick="this.closest('.notification').classList.remove('show')" 
+                        class="flex-shrink-0 hover:bg-white/10 rounded-full w-6 h-6 flex items-center justify-center transition-colors">
+                    <i class="fas fa-times text-sm"></i>
+                </button>
+            </div>
+        `;
+
+        notification.className = `notification ${type} show`;
+
+        setTimeout(() => {
+          notification.classList.remove("show");
+        }, duration);
+      }
+
+      // Debug function to check image loading
+      function debugImageLoading() {
+        const imageUrl = "{{ image_path }}";
+        const img = new Image();
+        img.onload = function () {
+          console.log("✅ Image loaded successfully:", imageUrl);
+          console.log("Image dimensions:", img.width, "x", img.height);
+        };
+        img.onerror = function () {
+          console.error("❌ Failed to load image:", imageUrl);
+          showNotification(
+            "Failed to load X-ray image for 3D visualization",
+            "error"
+          );
+        };
+        img.src = imageUrl;
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        // Call debug function
+        debugImageLoading();
+
+        // Show success notification after page loads
+        setTimeout(() => {
+          showNotification(
+            "Diagnostic analysis completed successfully",
+            "success"
+          );
+        }, 1000);
+
+        // Add click handlers for image zoom
+        document.querySelectorAll(".result-image").forEach((img) => {
+          img.addEventListener("click", function () {
+            this.classList.toggle("zoom-in");
+          });
+        });
+
+        // Fix for connection errors
+        if (
+          typeof chrome !== "undefined" &&
+          chrome.runtime &&
+          chrome.runtime.onConnect
+        ) {
+          try {
+            chrome.runtime.onConnect.addListener(function (port) {
+              console.log("Connected:", port.name);
+            });
+          } catch (e) {
+            console.log("Extension context available");
+          }
+        }
+
+        // Prevent lazy loading issues
+        const images = document.querySelectorAll('img[loading="lazy"]');
+        images.forEach((img) => {
+          img.loading = "eager";
+        });
+      });
+    </script>
+  </div>
+  {% endblock %}
+</div>
